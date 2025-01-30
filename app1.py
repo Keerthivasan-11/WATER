@@ -10,21 +10,29 @@ firebase_secrets = dict(st.secrets["firebase"])
 # ✅ Ensure the private key is correctly formatted (replace '\\n' with actual line breaks)
 firebase_secrets["private_key"] = firebase_secrets["private_key"].replace('\\n', '\n')
 
-# ✅ Directly initialize Firebase using the credentials dictionary
+# ✅ Check if Firebase has already been initialized
 if not firebase_admin._apps:
     try:
+        # Attempt to initialize Firebase with the credentials from secrets
         cred = credentials.Certificate(firebase_secrets)  # Pass credentials directly
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Replace with your actual Firebase Database URL
+            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Use your Firebase Database URL
         })
+        st.success("✅ Firebase initialization successful!")
+
     except Exception as e:
+        # Handle the error if Firebase initialization fails
         st.error(f"❌ Firebase initialization failed: {e}")
 
 # 🔹 Fetch Water Levels from Firebase
 def get_water_levels():
-    ref = db.reference('/')  # Adjust if data is stored under a specific node
-    data = ref.get()
-    return data
+    try:
+        ref = db.reference('/')  # Adjust if data is stored under a specific node
+        data = ref.get()
+        return data
+    except Exception as e:
+        st.error(f"❌ Error fetching data from Firebase: {e}")
+        return None
 
 # 🔹 Function to draw a tank based on water level
 def draw_tank(level, title):
@@ -67,4 +75,4 @@ if data:
         st.pyplot(draw_tank(sump2, "Sump 2"))
 
 else:
-    st.error("❌ Error fetching data from Firebase. Please check your database connection.")
+    st.error("❌ Error fetching data from Firebase.")
