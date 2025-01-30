@@ -5,10 +5,13 @@ import json
 import tempfile
 import matplotlib.pyplot as plt
 
-# ✅ Convert Firebase secrets to a temporary JSON file
+# ✅ Convert Streamlit Secrets object to a dictionary
+firebase_secrets = dict(st.secrets["firebase"])  # Convert to standard dictionary
+
+# ✅ Save Firebase credentials as a temporary JSON file
 with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".json") as temp_file:
-    json.dump(st.secrets["firebase"], temp_file)  # Write credentials to JSON
-    temp_file_path = temp_file.name  # Get file path
+    json.dump(firebase_secrets, temp_file)  # ✅ Dump dictionary to JSON
+    temp_file_path = temp_file.name  # ✅ Get file path
 
 # ✅ Initialize Firebase using the temporary JSON file
 if not firebase_admin._apps:
