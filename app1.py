@@ -16,7 +16,7 @@ if not firebase_admin._apps:
         # Attempt to initialize Firebase with the credentials from secrets
         cred = credentials.Certificate(firebase_secrets)  # Pass credentials directly
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Use your Firebase Database URL
+            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Your Firebase Database URL
         })
         st.success("✅ Firebase initialization successful!")
 
@@ -28,7 +28,7 @@ if not firebase_admin._apps:
 def get_water_levels():
     try:
         ref = db.reference('/')  # Adjust if data is stored under a specific node
-        data = ref.get()
+        data = ref.get()  # Fetch data from the root of the database
         return data
     except Exception as e:
         st.error(f"❌ Error fetching data from Firebase: {e}")
@@ -58,6 +58,7 @@ st.title("🚰 HMI Water Level Monitoring from Firebase")
 data = get_water_levels()
 
 if data:
+    # Fetch the specific water level values from the database
     reservoir = data.get('RESERVOIR VOLUME', 0)  # Default to 0 if key is missing
     sump1 = data.get('SUMP 1 VOLUME', 0)
     sump2 = data.get('SUMP 2 VOLUME', 0)
