@@ -1,23 +1,16 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, db
-import json
-import tempfile
 import matplotlib.pyplot as plt
 
-# ✅ Convert Streamlit Secrets object to a dictionary
-firebase_secrets = dict(st.secrets["firebase"])  # Convert to standard dictionary
+# ✅ Convert Streamlit Secrets to a standard dictionary
+firebase_secrets = dict(st.secrets["firebase"])
 
-# ✅ Save Firebase credentials as a temporary JSON file
-with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".json") as temp_file:
-    json.dump(firebase_secrets, temp_file)  # ✅ Dump dictionary to JSON
-    temp_file_path = temp_file.name  # ✅ Get file path
-
-# ✅ Initialize Firebase using the temporary JSON file
+# ✅ Initialize Firebase using the dictionary (no JSON file needed)
 if not firebase_admin._apps:
-    cred = credentials.Certificate(temp_file_path)
+    cred = credentials.Certificate(firebase_secrets)  # ✅ Directly pass dictionary
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your Firebase Database URL
+        'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your actual Firebase Database URL
     })
 
 # 🔹 Fetch Water Levels from Firebase
