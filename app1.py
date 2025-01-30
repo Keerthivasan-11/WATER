@@ -11,12 +11,12 @@ firebase_secrets = dict(st.secrets["firebase"])
 # ✅ Ensure the private key is correctly formatted (replace '\\n' with actual line breaks)
 firebase_secrets["private_key"] = firebase_secrets["private_key"].replace('\\n', '\n')
 
-# ✅ Write the credentials to a temporary JSON file
+# ✅ Write the secrets to a temporary JSON file that Firebase can read
 with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".json") as temp_file:
     json.dump(firebase_secrets, temp_file)  # Write JSON content
     temp_file_path = temp_file.name  # Save the file path for Firebase to use
 
-# ✅ Initialize Firebase using the temporary JSON file
+# ✅ Initialize Firebase using the temporary JSON file, but check if already initialized
 if not firebase_admin._apps:
     try:
         cred = credentials.Certificate(temp_file_path)  # ✅ Pass the temp file path
