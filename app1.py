@@ -3,57 +3,71 @@ import firebase_admin
 from firebase_admin import credentials, db
 import matplotlib.pyplot as plt
 
-# Firebase Setup
-firebase_credentials = st.secrets["firebase"]
-cred = credentials.Certificate(firebase_credentials)
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://your-database-name.firebaseio.com/'
-})
+# ✅ Initialize Firebase only once
+if not firebase_admin._apps:
+    firebase_credentials = {
+        "type": st.secrets["firebase"]["type"],
+        "project_id": st.secrets["firebase"]["project_id"],
+        "private_key_id": st.secrets["firebase"]["private_key_id"],
+        "private_key": st.secrets["firebase"]["private_key"].replace('\\n', '\n'),
+        "client_email": st.secrets["firebase"]["client_email"],
+        "client_id": st.secrets["firebase"]["client_id"],
+        "auth_uri": st.secrets["firebase"]["auth_uri"],
+        "token_uri": st.secrets["firebase"]["token_uri"],
+        "auth_provider_x509_cert_url": st.secrets["firebase"]["auth_provider_x509_cert_url"],
+        "client_x509_cert_url": st.secrets["firebase"]["client_x509_cert_url"],
+        "universe_domain": st.secrets["firebase"]["universe_domain"]
+    }
 
-# Function to fetch data from Firebase Realtime Database
+    cred = credentials.Certificate(firebase_credentials)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your Firebase Realtime Database URL
+    })
+
+# 🔹 Fetch Water Levels from Firebase
 def get_water_levels():
-    ref = db.reference('/')  # Root of the database, adjust to the appropriate node if needed
-    data = ref.get()  # Fetch the data
+    ref = db.reference('/')  # Adjust if data is stored under a specific node
+    data = ref.get()
     return data
 
-# Function to draw tank with water level
+# 🔹 Function to draw a tank based on water level
 def draw_tank(level, title):
     fig, ax = plt.subplots(figsize=(2, 4))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 100)
-    
+
     # Tank outline
     ax.add_patch(plt.Rectangle((0, 0), 1, 100, fill=False, edgecolor='black', linewidth=2))
-    
-    # Water level
+
+    # Water level inside the tank
     ax.add_patch(plt.Rectangle((0, 0), 1, level, color='blue'))
-    
+
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_title(title)
     return fig
 
-# Streamlit UI
+# 🔹 Streamlit UI
 st.title("🚰 HMI Water Level Monitoring from Firebase")
 
-# Fetch data from Firebase
+# 🔹 Fetch Data from Firebase
 data = get_water_levels()
+
 if data:
-    # Assuming the data contains 'RESERVOIR VOLUME', 'SUMP 1 VOLUME', 'SUMP 2 VOLUME'
-    reservoir = data.get('RESERVOIR VOLUME', 0)
+    reservoir = data.get('RESERVOIR VOLUME', 0)  # Default to 0 if key is missing
     sump1 = data.get('SUMP 1 VOLUME', 0)
     sump2 = data.get('SUMP 2 VOLUME', 0)
-    
-    # Display Tanks with respective water volumes
+
+    # 🔹 Display Water Tanks
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.pyplot(draw_tank(reservoir, "Reservoir Volume"))
+        st.pyplot(draw_tank(reservoir, "Reservoir"))
 
     with col2:
-        st.pyplot(draw_tank(sump1, "Sump 1 Volume"))
+        st.pyplot(draw_tank(sump1, "Sump 1"))
 
     with col3:
-        st.pyplot(draw_tank(sump2, "Sump 2 Volume"))
+        st.pyplot(draw_tank(sump2, "Sump 2"))
 else:
-    st.error("Error fetching data from Firebase. Please check your database.")
+    st.error("❌ Error fetching data from Firebase. Please check your database connection.")
