@@ -2,20 +2,17 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, db
 import json
-import tempfile
 import matplotlib.pyplot as plt
 
-# ✅ Convert Streamlit Secrets to a dictionary
+# ✅ Extract Firebase credentials correctly from secrets
 firebase_secrets = dict(st.secrets["firebase"])
 
-# ✅ Save the Firebase credentials as a temporary JSON file
-with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".json") as temp_file:
-    json.dump(firebase_secrets, temp_file)  # Write JSON content
-    temp_file_path = temp_file.name  # Save file path
+# ✅ Ensure the private key is formatted properly (replace `\\n` with actual `\n`)
+firebase_secrets["private_key"] = firebase_secrets["private_key"].replace('\\n', '\n')
 
-# ✅ Initialize Firebase using the temporary JSON file
+# ✅ Initialize Firebase only if not already initialized
 if not firebase_admin._apps:
-    cred = credentials.Certificate(temp_file_path)  # ✅ Use file path instead of dictionary
+    cred = credentials.Certificate(firebase_secrets)  # ✅ Pass dictionary directly
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your actual Firebase URL
     })
