@@ -21,7 +21,7 @@ if not firebase_admin._apps:
     try:
         cred = credentials.Certificate(temp_file_path)  # ✅ Pass the temp file path
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your actual Firebase Database URL
+            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # 🔹 Use your provided Firebase Database URL
         })
     except Exception as e:
         st.error(f"❌ Firebase initialization failed: {e}")
