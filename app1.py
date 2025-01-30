@@ -1,20 +1,19 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, db
-import json
 import matplotlib.pyplot as plt
 
-# ✅ Extract Firebase credentials correctly from secrets
+# ✅ Extract and format the private key from Streamlit secrets
 firebase_secrets = dict(st.secrets["firebase"])
 
-# ✅ Ensure the private key is formatted properly (replace `\\n` with actual `\n`)
+# ✅ Replace the '\\n' with actual line breaks in private_key field
 firebase_secrets["private_key"] = firebase_secrets["private_key"].replace('\\n', '\n')
 
-# ✅ Initialize Firebase only if not already initialized
+# ✅ Initialize Firebase using the updated secrets
 if not firebase_admin._apps:
-    cred = credentials.Certificate(firebase_secrets)  # ✅ Pass dictionary directly
+    cred = credentials.Certificate(firebase_secrets)  # ✅ Pass formatted dictionary to Firebase
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your actual Firebase URL
+        'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your actual Firebase Database URL
     })
 
 # 🔹 Fetch Water Levels from Firebase
