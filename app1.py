@@ -1,27 +1,20 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, db
+import json
+import tempfile
 import matplotlib.pyplot as plt
 
-# ✅ Initialize Firebase only once
-if not firebase_admin._apps:
-    firebase_credentials = {
-        "type": st.secrets["firebase"]["type"],
-        "project_id": st.secrets["firebase"]["project_id"],
-        "private_key_id": st.secrets["firebase"]["private_key_id"],
-        "private_key": st.secrets["firebase"]["private_key"].replace('\\n', '\n'),
-        "client_email": st.secrets["firebase"]["client_email"],
-        "client_id": st.secrets["firebase"]["client_id"],
-        "auth_uri": st.secrets["firebase"]["auth_uri"],
-        "token_uri": st.secrets["firebase"]["token_uri"],
-        "auth_provider_x509_cert_url": st.secrets["firebase"]["auth_provider_x509_cert_url"],
-        "client_x509_cert_url": st.secrets["firebase"]["client_x509_cert_url"],
-        "universe_domain": st.secrets["firebase"]["universe_domain"]
-    }
+# ✅ Convert Firebase secrets to a temporary JSON file
+with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".json") as temp_file:
+    json.dump(st.secrets["firebase"], temp_file)  # Write credentials to JSON
+    temp_file_path = temp_file.name  # Get file path
 
-    cred = credentials.Certificate(firebase_credentials)
+# ✅ Initialize Firebase using the temporary JSON file
+if not firebase_admin._apps:
+    cred = credentials.Certificate(temp_file_path)
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your Firebase Realtime Database URL
+        'databaseURL': 'https://your-database-name.firebaseio.com/'  # 🔹 Replace with your Firebase Database URL
     })
 
 # 🔹 Fetch Water Levels from Firebase
@@ -69,5 +62,6 @@ if data:
 
     with col3:
         st.pyplot(draw_tank(sump2, "Sump 2"))
+
 else:
     st.error("❌ Error fetching data from Firebase. Please check your database connection.")
