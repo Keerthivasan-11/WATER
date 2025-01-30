@@ -1,11 +1,20 @@
 import streamlit as st
+import firebase_admin
+from firebase_admin import credentials, db
 import matplotlib.pyplot as plt
-import numpy as np
-import time
 
-# Hardcoded credentials (Replace with a secure method later)
-VALID_USERNAME = "admin"
-VALID_PASSWORD = "password123"
+# Firebase Setup
+firebase_credentials = st.secrets["firebase"]
+cred = credentials.Certificate(firebase_credentials)
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://your-database-name.firebaseio.com/'
+})
+
+# Function to fetch data from Firebase Realtime Database
+def get_water_levels():
+    ref = db.reference('/')  # Root of the database, adjust to the appropriate node if needed
+    data = ref.get()  # Fetch the data
+    return data
 
 # Function to draw tank with water level
 def draw_tank(level, title):
@@ -25,55 +34,26 @@ def draw_tank(level, title):
     return fig
 
 # Streamlit UI
-st.title("🚰 HMI Water Level Monitoring")
+st.title("🚰 HMI Water Level Monitoring from Firebase")
 
-# Simulated Water Levels (HMI interface is always visible)
-if "reservoir" not in st.session_state:
-    st.session_state.reservoir = 50
-if "sump1" not in st.session_state:
-    st.session_state.sump1 = 30
-if "sump2" not in st.session_state:
-    st.session_state.sump2 = 70
+# Fetch data from Firebase
+data = get_water_levels()
+if data:
+    # Assuming the data contains 'RESERVOIR VOLUME', 'SUMP 1 VOLUME', 'SUMP 2 VOLUME'
+    reservoir = data.get('RESERVOIR VOLUME', 0)
+    sump1 = data.get('SUMP 1 VOLUME', 0)
+    sump2 = data.get('SUMP 2 VOLUME', 0)
+    
+    # Display Tanks with respective water volumes
+    col1, col2, col3 = st.columns(3)
 
-# Display Tanks
-col1, col2, col3 = st.columns(3)
+    with col1:
+        st.pyplot(draw_tank(reservoir, "Reservoir Volume"))
 
-with col1:
-    st.pyplot(draw_tank(st.session_state.reservoir, "Reservoir"))
+    with col2:
+        st.pyplot(draw_tank(sump1, "Sump 1 Volume"))
 
-with col2:
-    st.pyplot(draw_tank(st.session_state.sump1, "Sump 1"))
-
-with col3:
-    st.pyplot(draw_tank(st.session_state.sump2, "Sump 2"))
-
-# ---- Reset Buttons Require Authentication ----
-
-# Check if user is logged in for reset buttons
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-if st.session_state.authenticated:
-    st.subheader("🔐 Reset Water Levels")
-    if st.button("Reset Reservoir Pump"):
-        st.session_state.reservoir = 0
-    if st.button("Reset Sump 1"):
-        st.session_state.sump1 = 0
-    if st.button("Reset Sump 2"):
-        st.session_state.sump2 = 0
-
-    if st.button("Logout"):
-        st.session_state.authenticated = False
-        st.rerun()
+    with col3:
+        st.pyplot(draw_tank(sump2, "Sump 2 Volume"))
 else:
-    st.subheader("🔐 Login to Reset Water Levels")
-    username = st.text_input("User ID")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        if username == VALID_USERNAME and password == VALID_PASSWORD:
-            st.session_state.authenticated = True
-            st.success("✅ Login Successful!")
-            st.rerun()
-        else:
-            st.error("❌ Invalid Credentials! Please try again.")
+    st.error("Error fetching data from Firebase. Please check your database.")
