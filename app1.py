@@ -98,7 +98,7 @@ elif selected_page == "Pump Control":
     st.header("🔐 Pump Control Panel")
 
     # 🔐 Password Authentication
-    PASSWORD = "admin123"  # Change this to a secure password
+    PASSWORD = "63699"  # Change this to a secure password
 
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
