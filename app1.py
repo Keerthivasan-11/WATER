@@ -4,37 +4,32 @@ from firebase_admin import credentials, db
 import json
 import matplotlib.pyplot as plt
 
-# ✅ Extract and properly format the private key from Streamlit secrets
+# ✅ Extract Firebase credentials from Streamlit Secrets
 firebase_secrets = dict(st.secrets["firebase"])
+firebase_secrets["private_key"] = firebase_secrets["private_key"].replace('\\n', '\n')  # Fix newlines
 
-# ✅ Ensure the private key is correctly formatted (replace '\\n' with actual line breaks)
-firebase_secrets["private_key"] = firebase_secrets["private_key"].replace('\\n', '\n')
-
-# ✅ Check if Firebase has already been initialized
+# ✅ Initialize Firebase (only once)
 if not firebase_admin._apps:
     try:
-        # Attempt to initialize Firebase with the credentials from secrets
-        cred = credentials.Certificate(firebase_secrets)  # Pass credentials directly
+        cred = credentials.Certificate(firebase_secrets)  # Directly pass the credentials
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Your Firebase Database URL
+            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Replace with your database URL
         })
-        st.success("✅ Firebase initialization successful!")
-
+        st.success("✅ Firebase connected successfully!")
     except Exception as e:
-        # Handle the error if Firebase initialization fails
         st.error(f"❌ Firebase initialization failed: {e}")
 
-# 🔹 Fetch Water Levels from Firebase
+# 🔹 Function to fetch water levels from Firebase
 def get_water_levels():
     try:
-        ref = db.reference('/')  # Adjust if data is stored under a specific node
-        data = ref.get()  # Fetch data from the root of the database
+        ref = db.reference('/')  # Fetch data from the root
+        data = ref.get()
         return data
     except Exception as e:
         st.error(f"❌ Error fetching data from Firebase: {e}")
         return None
 
-# 🔹 Function to draw a tank based on water level
+# 🔹 Function to visualize water levels as tanks
 def draw_tank(level, title):
     fig, ax = plt.subplots(figsize=(2, 4))
     ax.set_xlim(0, 1)
@@ -58,7 +53,7 @@ st.title("🚰 HMI Water Level Monitoring from Firebase")
 data = get_water_levels()
 
 if data:
-    # Fetch the specific water level values from the database
+    # Fetch water level values
     reservoir = data.get('RESERVOIR VOLUME', 0)  # Default to 0 if key is missing
     sump1 = data.get('SUMP 1 VOLUME', 0)
     sump2 = data.get('SUMP 2 VOLUME', 0)
@@ -76,4 +71,4 @@ if data:
         st.pyplot(draw_tank(sump2, "Sump 2"))
 
 else:
-    st.error("❌ Error fetching data from Firebase.")
+    st.error("❌ No data found in Firebase.")
