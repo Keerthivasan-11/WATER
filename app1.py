@@ -13,7 +13,7 @@ if not firebase_admin._apps:
     try:
         cred = credentials.Certificate(firebase_secrets)  # Directly pass the credentials
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Replace with your database URL
+            'databaseURL': 'https://edge-watermgmt-default-rtdb.firebaseio.com/'  # Your Firebase Database URL
         })
         st.success("✅ Firebase connected successfully!")
     except Exception as e:
@@ -31,7 +31,7 @@ def get_water_levels():
 
 # 🔹 Function to visualize water levels as tanks
 def draw_tank(level, title):
-    fig, ax = plt.subplots(figsize=(2, 4))
+    fig, ax = plt.subplots(figsize=(2, 5))  # Increase figure height
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 100)
 
@@ -41,9 +41,12 @@ def draw_tank(level, title):
     # Water level inside the tank
     ax.add_patch(plt.Rectangle((0, 0), 1, level, color='blue'))
 
+    # Display the water level as text inside the tank
+    ax.text(0.5, level + 5, f"{level:.2f}%", fontsize=12, ha='center', color='white', fontweight='bold')
+
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_title(title)
+    ax.set_title(title, fontsize=14)
     return fig
 
 # 🔹 Streamlit UI
